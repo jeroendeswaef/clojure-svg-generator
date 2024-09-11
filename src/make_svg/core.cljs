@@ -20,7 +20,7 @@
        :stroke "black"
        :fill "transparent"}]]]))
 
-(def angles [0 15 30 45 60 75 90])
+(def step-cnt 7)
 (def inner-radius 20)
 (def outer-radius 50)
 (defn coords-at-angle [r angle] 
@@ -28,8 +28,11 @@
      :y (format "%.2f" (* r (math/sin (math/to-radians angle)))) }
 )
 (defn coords-str-at-angle [r angle] (let [coords (coords-at-angle r angle)] (str (get coords :x) " " (get coords :y))))
-(println (apply str (map (fn [angle] (str "M " (coords-str-at-angle inner-radius angle) " L " (coords-str-at-angle outer-radius angle))) angles)))
-(def hinge-path (apply str (map (fn [angle] (str "M " (coords-str-at-angle inner-radius angle) " L " (coords-str-at-angle outer-radius angle) " z ")) angles)))
+(def steps (map (fn [step-i] { :angle (/ (* step-i 90) (- step-cnt 1))} ) (range 0 step-cnt)))
+(def combined-path (apply str (map (fn [step] (str "M " (coords-str-at-angle inner-radius (get step :angle)) " L " (coords-str-at-angle outer-radius (get step :angle)) " z ")) steps)))
+
+(println combined-path)
+(def hinge-path combined-path)
 
 (defn write-rss! [xml]
   (with-open [out-file (java.io.FileWriter. "out.svg")]
