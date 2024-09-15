@@ -21,7 +21,7 @@
        :stroke "black"
        :fill "transparent"}]]]))
 
-(def step-cnt 7)
+(def step-cnt 8)
 (def inner-radius 20)
 (def outer-radius 50)
 (defn coords-at-angle [r angle] 
@@ -29,26 +29,28 @@
      :y (format "%.2f" (* r (math/sin (math/to-radians angle)))) }
 )
 (defn coords-str-at-angle [r angle] (let [coords (coords-at-angle r angle)] (str (get coords :x) " " (get coords :y))))
-;;(def steps (map (fn [step-i] [{ :angle (/ (* step-i 90) (- step-cnt 1)), :kind :cross}] ) (range 0 step-cnt)))
-(def steps (reduce (fn [state input] (
-  let [angle (/ (* input 90) (- step-cnt 1))] 
-  (((remove nil?) conj) (conj state { :kind :cross, :angle angle }) ( if (< (/ (count state) 2) (- step-cnt 1)) { :kind :bind })) 
-)) [] (range 0 step-cnt)))
+(def steps (drop-last (interleave 
+  (reduce (fn [state input] (
+    let [angle (/ (* input 90) (- step-cnt 1))] 
+    (conj state { :kind :cross, :angle angle, :direction (if (= 0 (mod (count state) 2)) :out :in)  })
+  )) [] (range 0 step-cnt))
+  (repeat { :kind :bind })
+)))
 (println "steps:" steps)
 (defn combined-path [steps]
+  (str "M 0 0 "
   (apply str (map (fn[step] (case (get step :kind)
-    :cross (join " " [(coords-str-at-angle inner-radius (get step :angle)) "L" (coords-str-at-angle outer-radius (get step :angle))])
-    :bind "-"
+    :cross (join " L " (let [f (if (= (get step :direction) :in) reverse identity)] (f [(coords-str-at-angle inner-radius (get step :angle)) (coords-str-at-angle outer-radius (get step :angle))])))
+    :bind " L "
   )) steps))
+  " z ")
 )
-;;(def combined-path (str "M 0 0 " (apply str (map (fn [step] (str "L " (coords-str-at-angle inner-radius (get step :angle)) " L " (coords-str-at-angle outer-radius (get step :angle)) " ")) steps)) " z"))
+(def hinge-path (combined-path steps))
 
-(println (combined-path steps))
-;;(def hinge-path combined-path)
+(println hinge-path)
+(defn write-rss! [xml]
+  (with-open [out-file (java.io.FileWriter. "out.svg")]
+    (xml/emit xml out-file)))
 
-;;(defn write-rss! [xml]
-;;   (with-open [out-file (java.io.FileWriter. "out.svg")]
-;;     (xml/emit xml out-file)))
-
-;; (-> (generate-svg-xml hinge-path)
-;;     write-rss!)
+(-> (generate-svg-xml hinge-path)
+    write-rss!)
