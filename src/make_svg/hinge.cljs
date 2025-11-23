@@ -49,7 +49,7 @@
 
 (println hinge-path)
 (defn write-rss! [xml]
-  (with-open [out-file (java.io.FileWriter. "out.svg")]
+  (with-open [out-file (java.io.FileWriter. "hinge.svg")]
     (xml/emit xml out-file)))
 
 (-> (generate-svg-xml hinge-path)

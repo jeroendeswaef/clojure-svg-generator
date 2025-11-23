@@ -4,7 +4,7 @@ Small clojure program that creates a svg for a living hinge. The goal is to be a
 
 To invoke:
 
-    clj -M src/make_svg/core.cljs
+    clj -M src/make_svg/hinge.cljs
 
 This should generate an svg:
 

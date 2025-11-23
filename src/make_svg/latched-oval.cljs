@@ -7,7 +7,7 @@
 (def width 220)
 (def height 160)
 (def latch-width 10)
-(def is-enable-latch true)
+(def is-enable-latch false)
 
 (def document-width (+ width (* 2 padding)))
 (def document-height (+ height (* 2 padding)))
@@ -41,7 +41,7 @@
 ))
 
 (defn write-rss! [xml]
-  (with-open [out-file (java.io.FileWriter. "latched-oval.svg")]
+  (with-open [out-file (java.io.FileWriter. (str "latched-oval-" is-enable-latch ".svg"))]
     (xml/emit xml out-file)))
 
 (-> (generate-svg-xml latched-oval-path)
