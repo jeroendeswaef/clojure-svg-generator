@@ -3,19 +3,20 @@
   (:require [clojure.data.xml :as xml])
   (:require [clojure.math :as math]))
 
+(def thickness 2)
 (defn generate-svg-xml [hinge-path]
   (xml/sexp-as-element
    [:svg
     {:version "1.1"
-     :width "100"
-     :height "100"
-     :viewBox "0 0 100 100"
+     :width "60mm"
+     :height "60mm"
+     :viewBox "0 0 60 60"
      :xmlns "http://www.w3.org/2000/svg"}
     [:g
      {}
      [:path
       {:d hinge-path
-       :stroke-width "0.4"
+       :stroke-width thickness
        :transform-origin "center"
        :transform "scale(1, -1)"
        :stroke "black"
@@ -24,9 +25,10 @@
 (def step-cnt 8)
 (def inner-radius 20)
 (def outer-radius 50)
+
 (defn coords-at-angle [r angle] 
-    {:x (format "%.2f" (* r (math/cos (math/to-radians angle)))) 
-     :y (format "%.2f" (* r (math/sin (math/to-radians angle)))) }
+    {:x (format "%.2f" (+ (/ thickness 2) (* r (math/cos (math/to-radians angle))))) 
+     :y (format "%.2f" (+ (/ thickness 2) (* r (math/sin (math/to-radians angle))))) }
 )
 (defn coords-str-at-angle [r angle] (let [coords (coords-at-angle r angle)] (str (get coords :x) " " (get coords :y))))
 (def steps (drop-last (interleave 
@@ -38,12 +40,12 @@
 )))
 (println "steps:" steps)
 (defn combined-path [steps]
-  (str "M 0 0 "
+  (str "M "
   (apply str (map (fn[step] (case (get step :kind)
     :cross (join " L " (let [f (if (= (get step :direction) :in) reverse identity)] (f [(coords-str-at-angle inner-radius (get step :angle)) (coords-str-at-angle outer-radius (get step :angle))])))
     :bind " L "
   )) steps))
-  " z ")
+  "  ")
 )
 (def hinge-path (combined-path steps))
 
