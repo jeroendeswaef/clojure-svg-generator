@@ -1,2 +1,4 @@
 {:deps {hiccup/hiccup {:mvn/version "2.0.0-RC3"}
-        org.clojure/data.xml {:mvn/version "0.0.8"}}}
+        org.clojure/data.xml {:mvn/version "0.0.8"}
+        org.clojure/data.json {:mvn/version "2.2.1"}}
+        }
