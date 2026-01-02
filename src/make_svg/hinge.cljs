@@ -40,43 +40,42 @@
   )) [] (range 0 step-cnt))
 )
 (println "angle-steps:" angle-steps )
-
-(def hinge-path (apply str (map (fn[ steps ]
+(defn line-coords [is-inner step]
+  (let [
+      fn-coords-swap (if (= (get step :direction) :in) reverse identity)
+      radius-delta (if (= is-inner true) bend-radius 0)
+      ]
+      (let [
+        [start end] (fn-coords-swap 
+          [(coords-at-angle ( + inner-radius radius-delta) (get step :angle))
+          (coords-at-angle (- outer-radius radius-delta) (get step :angle))])
+      ]
+        { :start start :end end }
+      )
+  )
+)
+;; (println "line-coords:", (line-coords true (get angle-steps 0)))
+(def hinge-path (apply str (map-indexed (fn[ index steps ]
   (let [[current next] steps]
     (let [
       fn-current-coords-swap (if (= (get current :direction) :in) reverse identity)
       fn-next-coords-swap (if (= (get next :direction) :in) reverse identity)
       ]
       (let [
-        current-inner-line-coords (fn-current-coords-swap [
-          (coords-at-angle ( + inner-radius bend-radius) (get current :angle))
-          (coords-at-angle (- outer-radius bend-radius) (get current :angle)) ])
-        next-inner-line-coords (fn-next-coords-swap [
-          (coords-at-angle ( + inner-radius bend-radius) (get next :angle))
-          (coords-at-angle (- outer-radius bend-radius) (get next :angle)) ])
-        current-outer-line-coords (fn-current-coords-swap [
-          (coords-at-angle inner-radius (get current :angle))
-          (coords-at-angle outer-radius (get current :angle)) ])
-        next-outer-line-coords (fn-next-coords-swap [
-          (coords-at-angle inner-radius (get next :angle))
-          (coords-at-angle outer-radius (get next :angle)) ])
-        ]
-        (let [
-          [current-start current-end] current-inner-line-coords
-          [current-outer-start current-outer-end] current-outer-line-coords
-          [next-start next-end] next-inner-line-coords
-          [next-outer-start next-outer-end] next-outer-line-coords
-        ]
-          (str 
-            "M" (get current-start :x) "," (get current-start :y) " " 
-            "L" (get current-end :x) "," (get current-end :y) " "
-            (if (= (get next :direction) :none) "" (str "C " 
-              (get current-outer-end :x) "," (get current-outer-end :y) " " ;; x1 y1
-              (get next-outer-start :x) "," (get next-outer-start :y) " " ;; x2 y2
-              (get next-start :x) "," (get next-start :y) " ")) ;; x y
-          )
+        current-outer-end (get (line-coords false current) :end)
+        next-start (get (line-coords true next) :start)
+        next-outer-start (get (line-coords false next) :start)
+      ]
+        (str 
+          (if (= index 0) (str "M" (get (get (line-coords false current) :start) :x) "," (get (get (line-coords false current) :start) :y) " ") "")
+          "L" (get (get (line-coords true current) :end) :x) "," (get (get (line-coords (if (= (get next :direction) :none) false true) current) :end) :y) " "
+          (if (= (get next :direction) :none) "" (str "C " 
+            (get current-outer-end :x) "," (get current-outer-end :y) " " ;; x1 y1
+            (get next-outer-start :x) "," (get next-outer-start :y) " " ;; x2 y2
+            (get next-start :x) "," (get next-start :y) " ")) ;; x y
         )
-  ))))
+      )
+  )))
   (partition 2 1 (conj angle-steps { :angle 0, :direction :none }))
 )))
 
