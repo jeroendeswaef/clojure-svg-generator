@@ -3,15 +3,13 @@
   (:require [clojure.data.xml :as xml])
   (:require [clojure.math :as math]))
 
-(def border-radius 5)
 (def padding 7)
-(def width 40)
-(def height 30)
 
-(def document-width (+ width (* 2 padding)))
-(def document-height (+ height (* 2 padding)))
-
-(defn generate-svg-xml [svg-path]
+(defn generate-svg-xml [svg-path rectangle-width rectangle-height]
+  (let [
+    document-width (+ rectangle-width (* 2 padding))
+    document-height (+ rectangle-height (* 2 padding))
+    ]
   (xml/sexp-as-element
    [:svg
     {:version "1.1"
@@ -25,18 +23,18 @@
        :stroke-width "0.4"
        :stroke "black"
        :fill "transparent"
-       }]]))
+       }]])))
 
-(defn rounded-curve [xfactor yfactor] (str " a" border-radius "," border-radius " 0 0 1 " (* xfactor border-radius) "," (* yfactor border-radius)))
+(defn rounded-curve [xfactor yfactor rectangle-border-radius] (str " a" rectangle-border-radius "," rectangle-border-radius " 0 0 1 " (* xfactor rectangle-border-radius) "," (* yfactor rectangle-border-radius)))
 
-(def rounded-rectangle-path (str "M" padding "," (+ padding border-radius) 
-  (rounded-curve 1 -1)
-" h" (- width (* 2 border-radius)) 
-  (rounded-curve 1 1)
-" v" (- height (* 2 border-radius))
-  (rounded-curve -1 1)
-" h-" (- width (* 2 border-radius) )
-  (rounded-curve -1 -1)
+(defn rounded-rectangle-path [rectangle-width rectangle-height rectangle-border-radius] (str "M" padding "," (+ padding rectangle-border-radius)
+  (rounded-curve 1 -1 rectangle-border-radius)
+" h" (- rectangle-width (* 2 rectangle-border-radius))
+  (rounded-curve 1 1 rectangle-border-radius)
+" v" (- rectangle-height (* 2 rectangle-border-radius))
+  (rounded-curve -1 1 rectangle-border-radius)
+" h-" (- rectangle-width (* 2 rectangle-border-radius) )
+  (rounded-curve -1 -1 rectangle-border-radius)
 " z"
 ))
 
@@ -44,5 +42,11 @@
   (with-open [out-file (java.io.FileWriter. "rounded-rectangle.svg")]
     (xml/emit xml out-file)))
 
-(-> (generate-svg-xml rounded-rectangle-path)
-    write-rss!)
+(->
+  (let [
+      rectangle-width (Integer/parseInt (nth *command-line-args* 0))
+      rectangle-height (Integer/parseInt (nth *command-line-args* 1))
+      rectangle-border-radius (Integer/parseInt (nth *command-line-args* 2))
+    ]
+  (generate-svg-xml (rounded-rectangle-path rectangle-width rectangle-height rectangle-border-radius) rectangle-width rectangle-height))
+     write-rss!)
